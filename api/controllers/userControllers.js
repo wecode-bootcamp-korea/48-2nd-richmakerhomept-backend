@@ -1,5 +1,6 @@
 const { userServices } = require("../services");
 const { catchAsync } = require("../utils/error");
+const request = require("request-promise");
 
 const presignIn = catchAsync(async (req, res) => {
   const { phoneNumber } = req.body;
@@ -27,7 +28,30 @@ const signUp = catchAsync(async (req, res) => {
     throw error;
   }
 
-  const memBership = await userServices.signUp(userName, password, phoneNumber);
+  const getCI = {
+    method: 'POST',
+    uri:'http://10.58.52.214:3000/auth', 
+    body: {
+      phoneNumber: phoneNumber,
+    },
+    json: true 
+  }
+  const responseBody = await request(getCI);
+  const getCIByPhoneNumber = responseBody[0].CI;
+  if (responseBody) {
+    return res.status(200).json({message: "Successful authentication"})
+  }else if(!responseBody){
+    const error = new Error("not Personal authentication");
+    error.status = 400;
+    throw error;
+  }
+
+  const membership =  await userServices.signUp(
+    getCIByPhoneNumber,
+    userName,
+    password,
+    phoneNumber
+  );
   res.status(201).json({ message: "user is created" });
 });
 
