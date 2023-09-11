@@ -19,23 +19,24 @@ const phoneNumberCheck = async (phoneNumber) => {
   }
 };
 
-const createUser = async (userName, password, phoneNumber) => {
+const createUser = async (CI, userName, password, phoneNumber) => {
   try {
     const result = await AppDataSource.query(
       `
         INSERT INTO users (
+          ci,
           user_name, 
           phone_number,
           password
         ) VALUES (
           ?,
           ?,
+          ?,
           ?
         )
       `,
-      [userName, password, phoneNumber]
+      [CI, userName, password, phoneNumber]
     );
-
     return result;
   } catch {
     const error = new Error("dataSource Error #createUser");
@@ -44,7 +45,7 @@ const createUser = async (userName, password, phoneNumber) => {
   }
 };
 
-const getUserByphoneNumber = async (phoneNumber) => {
+const getUserByPhoneNumer = async (phoneNumber) => {
   try {
     const [result] = await AppDataSource.query(
       `
@@ -74,8 +75,8 @@ const getUserById = async (id) => {
       `
         SELECT 
           id,
-          nickname,
-          phoneNumber,
+          user_name,
+          phone_number,
           password
           FROM users
           WHERE id = ?
@@ -87,14 +88,98 @@ const getUserById = async (id) => {
   } catch {
     const error = new Error("dataSource id Error");
     error.statusCode = 400;
-
     throw error;
   }
 };
 
-module.exports = {
-  phoneNumberCheck,
-  createUser,
-  getUserByphoneNumber,
+const findUserByUsername = async(id) => {
+  try{
+    const [result] = await AppDataSource.query(
+      `
+      SELECT
+      id,
+      user_name,
+      password
+      FROM users
+      WHERE id = ?
+      `,
+      [id]
+    );
+    return result;
+  }catch{
+    const error = new Error("SELECT ERROR");
+    error.statusCode = 401;
+    throw error;
+  }
+};
+
+const updatePassword = async(userId, hashedPassword) =>{
+  try{
+    const result = await AppDataSource.query(
+      `
+      UPDATE users
+      SET
+      password = ?
+      WHERE id= ?
+      `,
+    [hashedPassword, userId]
+    );
+    return result;
+  }catch{
+    const error = new Error("invalid password");
+    error.statusCode = 400;
+    throw error;
+  }
+}
+
+const updateProfileImageURL = async(id,uploadedFileURL) =>{
+  try{
+    const result = await AppDataSource.query(
+      `
+      UPDATE users
+      SET
+      profile_image = ?
+      WHERE id= ?
+      `,
+      [uploadedFileURL, id]
+    );
+    return result
+  }catch(error){
+    console.log(error)
+    const eroor = new Error("URL dataSource ERROR");
+    eroor.statusCode = 400;
+    throw error;
+  }
+}
+
+const getDefaultProfileImage  = async(userId) => {
+  try{
+    console.log(userId)
+    const result = await AppDataSource.query(
+      `
+      SELECT
+      id,
+      profile_image
+      FROM users
+      WHERE id = ?
+      `,
+      [userId]
+    );
+    return result
+  }catch{
+    const error = new Error("dataSource Error");
+    error.stautsCode = 400;
+    throw error
+  }
+}
+
+module.exports = { 
+  phoneNumberCheck, 
+  createUser, 
+  getUserByPhoneNumer, 
   getUserById,
+  findUserByUsername,
+  updatePassword,
+  updateProfileImageURL,
+  getDefaultProfileImage
 };
