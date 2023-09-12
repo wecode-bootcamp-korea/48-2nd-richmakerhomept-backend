@@ -33,8 +33,6 @@ const getCIByPhoneNumber = catchAsync(async (req, res) => {
     };
 
     const responseBody = await request(options);
-    console.log(options)
-    console.log(responseBody);
 
     if (responseBody) {
       return res.status(200).json({ message: "Successful authentication", CI: responseBody.CI});
