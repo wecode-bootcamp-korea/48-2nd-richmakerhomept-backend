@@ -1,7 +1,7 @@
-const { AppDataSource }= require("./dataSource");
+const { AppDataSource } = require("./dataSource");
 
-const phoneNumberCheck = async(phoneNumber) => {
-  try{
+const phoneNumberCheck = async (phoneNumber) => {
+  try {
     const result = await AppDataSource.query(
       `
       SELECT
@@ -11,9 +11,8 @@ const phoneNumberCheck = async(phoneNumber) => {
       `,
       [phoneNumber]
     );
-    console.log(result);
     return result;
-  }catch{
+  } catch {
     const error = new Error("INVALID_USER");
     error.stausCode = 400;
     throw error;
@@ -38,14 +37,14 @@ const createUser = async (userName, password, phoneNumber) => {
     );
 
     return result;
-  } catch{
+  } catch {
     const error = new Error("dataSource Error #createUser");
     error.statusCode = 400;
     throw error;
   }
 };
 
-const getUserByphoneNumer = async (phoneNumber) => {
+const getUserByphoneNumber = async (phoneNumber) => {
   try {
     const [result] = await AppDataSource.query(
       `
@@ -61,7 +60,7 @@ const getUserByphoneNumer = async (phoneNumber) => {
       [phoneNumber]
     );
     return result;
-  } catch{
+  } catch {
     const error = new Error("dataSource phoeNumber Error");
     error.statusCode = 400;
 
@@ -83,19 +82,19 @@ const getUserById = async (id) => {
       `,
       [id]
     );
-    
+
     return result;
   } catch {
-    const error = new Error('dataSource id Error');
+    const error = new Error("dataSource id Error");
     error.statusCode = 400;
 
     throw error;
   }
 };
 
-module.exports = { 
-  phoneNumberCheck, 
-  createUser, 
-  getUserByphoneNumer, 
-  getUserById 
+module.exports = {
+  phoneNumberCheck,
+  createUser,
+  getUserByphoneNumber,
+  getUserById,
 };
