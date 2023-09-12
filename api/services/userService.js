@@ -10,7 +10,16 @@ const hashPassword = async (plaintextPassword) => {
 };
 
 const getUserById = async (id) => {
-  return await userDao.getUserById(id);
+  try {
+    const result = await userDao.getUserById(id);
+    if (!result) {
+      throw new Error('User not found');
+    }
+    return result;
+  } catch (error) {
+    console.error('Error in getUserById:', error);
+    throw error;
+  }
 };
 
 const presignIn = async (phoneNumber) => {
@@ -64,12 +73,28 @@ const signIn = async (phoneNumber, password) => {
   };
 };
 
+const changePassword = async(id, existingPassword, newPassword) => {
+  if (!id || !existingPassword) {
+    throw new Error('User not found');
+  }
+  
+  const user = await userDao.findUserByUsername(id);
 
+  const isMatch = await bcrypt.compare(existingPassword, user.password);
+  if (!isMatch) {
+    throw new Error('Incorrect current password');
+  }
 
+  const hashedPassword = await hashPassword(newPassword);
+  const passwordchange = await userDao.updatePassword(id, hashedPassword);
+  
+  return passwordchange;
+};
 
 module.exports = { 
   presignIn, 
   getUserById, 
   signUp, 
-  signIn
+  signIn,
+  changePassword
 };
