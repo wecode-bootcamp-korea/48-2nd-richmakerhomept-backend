@@ -5,7 +5,7 @@ const catchAsync = (func) => {
 };
 
 const globalErrorHandler = (err, req, res, next) => {
-  console.error(err.stack);
+  // console.error(err.stack);
 
   err.statusCode = err.statusCode || 500;
 

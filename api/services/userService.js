@@ -17,19 +17,22 @@ const presignIn = async (phoneNumber) => {
   const phoneNumberCheck = await userDao.phoneNumberCheck(phoneNumber);
 
   return phoneNumberCheck;
-}
+};
 
 const signUp = async (userName, password, phoneNumber) => {
-  
   validateEmailAndPassword(phoneNumber, password);
   const hashedPassword = await hashPassword(password);
-  const createUser = await userDao.createUser(userName, phoneNumber, hashedPassword);
+  const createUser = await userDao.createUser(
+    userName,
+    phoneNumber,
+    hashedPassword
+  );
 
   return createUser;
 };
 
 const signIn = async (phoneNumber, password) => {
-  const user = await userDao.getUserByphoneNumer(phoneNumber, password);
+  const user = await userDao.getUserByphoneNumber(phoneNumber, password);
 
   if (!user) {
     const error = new Error("INVALID_USER");
@@ -55,9 +58,9 @@ const signIn = async (phoneNumber, password) => {
     }
   );
   return {
-    accessToken, 
+    accessToken,
     userName: user.user_name,
-    profileImage: user.profile_image
+    profileImage: user.profile_image,
   };
 };
 module.exports = { presignIn, getUserById, signUp, signIn };

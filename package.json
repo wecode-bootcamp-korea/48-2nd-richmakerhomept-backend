@@ -4,7 +4,7 @@
   "description": "",
   "main": "app.js",
   "scripts": {
-    "test": "DOTENV_CONFIG_PATH=, env.test jest --setupFiles=dotenv/config",
+    "test": "DOTENV_CONFIG_PATH=.env.test jest --setupFiles=dotenv/config",
     "start": "nodemon server.js"
   },
   "keywords": [],
@@ -25,5 +25,8 @@
   "devDependencies": {
     "morgan": "^1.10.0",
     "nodemon": "^3.0.1"
+  },
+  "jest": {
+    "testRegex": "(/tests/tests/.*|(\\.|/)(test))\\.js$"
   }
 }
