@@ -20,6 +20,31 @@ const presignIn = catchAsync(async (req, res) => {
   }
 });
 
+const getCIByPhoneNumber = catchAsync(async (req, res) => {
+  const { phoneNumber } = req.body;
+  console.log(req.body);
+    const options = {
+      method: 'POST',
+      uri: 'http://10.58.52.62:3000/auth',
+      body: {
+        phoneNumber: phoneNumber
+      },
+      json: true
+    };
+
+    const responseBody = await request(options);
+    console.log(options)
+    console.log(responseBody);
+
+    if (responseBody) {
+      return res.status(200).json({ message: "Successful authentication", CI: responseBody.CI});
+    } else {
+      const error = new Error("not Personal authentication");
+      error.status = 400;
+      throw error;
+    }
+});
+
 const signUp = catchAsync(async (req, res) => {
   const { userName, password, phoneNumber } = req.body;
   if (!userName || !password || !phoneNumber) {
@@ -28,26 +53,8 @@ const signUp = catchAsync(async (req, res) => {
     throw error;
   }
 
-  const getCI = {
-    method: 'POST',
-    uri:'http://10.58.52.214:3000/auth', 
-    body: {
-      phoneNumber: phoneNumber,
-    },
-    json: true 
-  }
-  const responseBody = await request(getCI);
-  const getCIByPhoneNumber = responseBody[0].CI;
-  if (responseBody) {
-    return res.status(200).json({message: "Successful authentication"})
-  }else if(!responseBody){
-    const error = new Error("not Personal authentication");
-    error.status = 400;
-    throw error;
-  }
-
   const membership =  await userServices.signUp(
-    getCIByPhoneNumber,
+    CI,
     userName,
     password,
     phoneNumber
@@ -75,4 +82,9 @@ const signIn = catchAsync(async (req, res) => {
   });
 });
 
-module.exports = { presignIn, signUp, signIn };
+module.exports = { 
+  presignIn, 
+  signUp, 
+  signIn, 
+  getCIByPhoneNumber
+};
