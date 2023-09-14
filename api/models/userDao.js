@@ -45,7 +45,7 @@ const createUser = async (CI, userName, password, phoneNumber) => {
   }
 };
 
-const getUserByPhoneNumer = async (phoneNumber) => {
+const getUserByphoneNumber = async (phoneNumber) => {
   try {
     const [result] = await AppDataSource.query(
       `
@@ -127,59 +127,16 @@ const updatePassword = async(userId, hashedPassword) =>{
     return result;
   }catch{
     const error = new Error("invalid password");
-    error.statusCode = 400;
+    error.statusCode = 401;
     throw error;
-  }
-}
-
-const updateProfileImageURL = async(id,uploadedFileURL) =>{
-  try{
-    const result = await AppDataSource.query(
-      `
-      UPDATE users
-      SET
-      profile_image = ?
-      WHERE id= ?
-      `,
-      [uploadedFileURL, id]
-    );
-    return result
-  }catch(error){
-    console.log(error)
-    const eroor = new Error("URL dataSource ERROR");
-    eroor.statusCode = 400;
-    throw error;
-  }
-}
-
-const getDefaultProfileImage  = async(userId) => {
-  try{
-    console.log(userId)
-    const result = await AppDataSource.query(
-      `
-      SELECT
-      id,
-      profile_image
-      FROM users
-      WHERE id = ?
-      `,
-      [userId]
-    );
-    return result
-  }catch{
-    const error = new Error("dataSource Error");
-    error.stautsCode = 400;
-    throw error
   }
 }
 
 module.exports = { 
   phoneNumberCheck, 
   createUser, 
-  getUserByPhoneNumer, 
+  getUserByphoneNumer, 
   getUserById,
   findUserByUsername,
-  updatePassword,
-  updateProfileImageURL,
-  getDefaultProfileImage
+  updatePassword
 };
