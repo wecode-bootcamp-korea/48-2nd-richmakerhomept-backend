@@ -10,16 +10,10 @@ const hashPassword = async (plaintextPassword) => {
 };
 
 const getUserById = async (id) => {
-  try {
-    const result = await userDao.getUserById(id);
-    if (!result) {
-      throw new Error('User not found');
-    }
-    return result;
-  } catch (error) {
-    console.error('Error in getUserById:', error);
-    throw error;
-  }
+
+  const result = await userDao.getUserById(id);
+
+  return result;
 };
 
 const presignIn = async (phoneNumber) => {
@@ -41,7 +35,7 @@ const signUp = async (userName, password, phoneNumber) => {
 };
 
 const signIn = async (phoneNumber, password) => {
-  const user = await userDao.getUserByphoneNumber(phoneNumber, password);
+  const user = await userDao.getUserByPhoneNumer(phoneNumber, password);
 
   if (!user) {
     const error = new Error("INVALID_USER");
@@ -67,7 +61,8 @@ const signIn = async (phoneNumber, password) => {
     }
   );
   return {
-    accessToken,
+    id: user.id,
+    accessToken, 
     userName: user.user_name,
     profileImage: user.profile_image,
   };
@@ -91,10 +86,26 @@ const changePassword = async(id, existingPassword, newPassword) => {
   return passwordchange;
 };
 
+const updateProfileImageURL = async(id, uploadedFileURL) =>{
+
+  const getUserById = await userDao.getUserById(id);
+
+  const profileImage = await userDao.updateProfileImageURL(id, uploadedFileURL);
+  return profileImage;
+}
+
+const getDefaultProfileImage  = async(userId) => {
+
+  const result =  await userDao.getDefaultProfileImage(userId);
+
+  return result;
+}
 module.exports = { 
   presignIn, 
   getUserById, 
   signUp, 
   signIn,
-  changePassword
+  changePassword,
+  updateProfileImageURL,
+  getDefaultProfileImage
 };

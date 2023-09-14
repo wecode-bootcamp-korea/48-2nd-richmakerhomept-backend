@@ -7,7 +7,6 @@ const loginRequired = async (req, res, next) => {
     if (!accessToken) {
       const error = new Error('NEED_ACCESS_TOKEN');
       error.statusCode = 401;
-
       return res.status(error.statusCode).json({ message: error.message });
     }
 
