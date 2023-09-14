@@ -19,7 +19,7 @@ const phoneNumberCheck = async (phoneNumber) => {
   }
 };
 
-const createUser = async (CI, userName, password, phoneNumber) => {
+const createUser = async (getCIByPhoneNumber, userName, password, phoneNumber) => {
   try {
     const result = await AppDataSource.query(
       `
@@ -35,7 +35,7 @@ const createUser = async (CI, userName, password, phoneNumber) => {
           ?
         )
       `,
-      [CI, userName, password, phoneNumber]
+      [getCIByPhoneNumber, userName, password, phoneNumber]
     );
     return result;
   } catch {
