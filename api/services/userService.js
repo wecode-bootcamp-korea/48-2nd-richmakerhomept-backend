@@ -63,13 +63,4 @@ const signIn = async (phoneNumber, password) => {
     profileImage: user.profile_image,
   };
 };
-
-
-
-
-module.exports = { 
-  presignIn, 
-  getUserById, 
-  signUp, 
-  signIn
-};
+module.exports = { presignIn, getUserById, signUp, signIn };
