@@ -78,9 +78,28 @@ const addMember = async (userId, receiverId, groupId) => {
     throw error;
   }
 };
+
+const getMemberList = async (groupId) => {
+  try {
+    return await AppDataSource.query(
+      `select u.id as userId, u.user_name as userName, u.profile_image as profileImage, SUM(case when uf.is_shared then 1 else 0 end) as sharedFinanceCount
+        from users u
+        LEFT join user_finances uf ON u.id = uf.user_id
+        where u.grouping_id = ?
+        GROUP BY u.id`,
+      [groupId]
+    );
+  } catch {
+    const error = new Error("dataSource Error");
+    error.statusCode = 400;
+    throw error;
+  }
+};
+
 module.exports = {
   sendInvitation,
   addMember,
   getGroupById,
   getMemberCount,
+  getMemberList,
 };

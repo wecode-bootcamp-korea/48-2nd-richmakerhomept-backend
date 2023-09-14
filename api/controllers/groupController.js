@@ -24,4 +24,15 @@ const sendInvitation = catchAsync(async (req, res) => {
   res.status(200).json({ message: "invitation sent and added member" });
 });
 
-module.exports = { addMember, sendInvitation };
+const getMemberList = catchAsync(async (req, res) => {
+  const userId = req.user.id;
+  if (!userId) {
+    const error = new Error("KEY ERROR");
+    error.statusCode = 400;
+    throw error;
+  }
+  const members = await groupService.getMemberList(userId);
+  res.status(200).json({ data: members });
+});
+
+module.exports = { addMember, sendInvitation, getMemberList };
