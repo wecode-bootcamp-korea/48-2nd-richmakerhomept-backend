@@ -22,6 +22,7 @@ const presignIn = catchAsync(async (req, res) => {
 
 const getCIByPhoneNumber = catchAsync(async (req, res) => {
   const { phoneNumber } = req.body;
+  console.log(req.body);
     const options = {
       method: 'POST',
       uri: 'http://10.58.52.62:3000/auth',
@@ -79,25 +80,9 @@ const signIn = catchAsync(async (req, res) => {
   });
 });
 
-const changePassword  = catchAsync(async(req, res) =>{
-  const {id} = req.user;
-
-  const {existingPassword, newPassword} = req.body;
-
-  if(!id || !existingPassword || !newPassword){
-    const error = new Error("KEY ERROR");
-    error.stauts = 400;
-    throw error;
-  }
-  const change = await userServices.changePassword(id, existingPassword, newPassword);
-
-  res.status(201).json({message: "changePassword"});
-})
-
 module.exports = { 
   presignIn, 
   signUp, 
   signIn, 
-  getCIByPhoneNumber,
-  changePassword
+  getCIByPhoneNumber
 };
