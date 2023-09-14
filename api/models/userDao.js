@@ -19,24 +19,23 @@ const phoneNumberCheck = async (phoneNumber) => {
   }
 };
 
-const createUser = async (getCIByPhoneNumber, userName, password, phoneNumber) => {
+const createUser = async (userName, password, phoneNumber) => {
   try {
     const result = await AppDataSource.query(
       `
         INSERT INTO users (
-          ci,
           user_name, 
           phone_number,
           password
         ) VALUES (
           ?,
           ?,
-          ?,
           ?
         )
       `,
-      [getCIByPhoneNumber, userName, password, phoneNumber]
+      [userName, password, phoneNumber]
     );
+
     return result;
   } catch {
     const error = new Error("dataSource Error #createUser");
