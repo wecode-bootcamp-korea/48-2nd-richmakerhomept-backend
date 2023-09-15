@@ -35,7 +35,7 @@ const signUp = async (userName, password, phoneNumber) => {
 };
 
 const signIn = async (phoneNumber, password) => {
-  const user = await userDao.getUserByPhoneNumer(phoneNumber, password);
+  const user = await userDao.getUserByPhoneNumber(phoneNumber, password);
 
   if (!user) {
     const error = new Error("INVALID_USER");

@@ -45,7 +45,7 @@ const createUser = async (CI, userName, password, phoneNumber) => {
   }
 };
 
-const getUserByPhoneNumer = async (phoneNumber) => {
+const getUserByPhoneNumber = async (phoneNumber) => {
   try {
     const [result] = await AppDataSource.query(
       `
@@ -176,7 +176,7 @@ const getDefaultProfileImage  = async(userId) => {
 module.exports = { 
   phoneNumberCheck, 
   createUser, 
-  getUserByPhoneNumer, 
+  getUserByPhoneNumber, 
   getUserById,
   findUserByUsername,
   updatePassword,
