@@ -74,8 +74,8 @@ const getUserById = async (id) => {
       `
         SELECT 
           id,
-          nickname,
-          phoneNumber,
+          user_name,
+          phone_number,
           password
           FROM users
           WHERE id = ?

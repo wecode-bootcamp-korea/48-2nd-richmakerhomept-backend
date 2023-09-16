@@ -1,3 +1,4 @@
 const userControllers = require("./userControllers");
+const providerControllers = require("./providerController");
 
-module.exports = { userControllers };
+module.exports = { userControllers, providerControllers };
