@@ -77,7 +77,7 @@ const changePassword = async(id, existingPassword, newPassword) => {
 
   const isMatch = await bcrypt.compare(existingPassword, user.password);
   if (!isMatch) {
-    throw new Error('Incorrect current password');
+    return {message: "INVALID_PASSWORD" };
   }
 
   const hashedPassword = await hashPassword(newPassword);
