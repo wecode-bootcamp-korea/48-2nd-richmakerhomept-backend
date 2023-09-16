@@ -113,8 +113,11 @@ const changePassword  = catchAsync(async(req, res) =>{
     throw error;
   }
   const change = await userServices.changePassword(id, existingPassword, newPassword);
-
+  if(change.message === "INVALID_PASSWORD"){
+    res.status(201).json({message: "INVALID_PASSWORD" });
+  }else{
   res.status(201).json({message: "changePassword"});
+  }
 })
 
 const updateProfileImage = catchAsync(async (req, res) => {
@@ -127,7 +130,7 @@ const updateProfileImage = catchAsync(async (req, res) => {
 
     const {id} = req.user;
     const profileImage = await userServices.updateProfileImageURL(id, uploadedFileURL);
-    console.log(id, uploadedFileURL);
+
     res.status(200).json({ profileImage: req.file.location });
   });
 });
@@ -135,7 +138,6 @@ const updateProfileImage = catchAsync(async (req, res) => {
 const getDefaultProfileImage = catchAsync(async(req, res) => {
   
   const userId = req.params.userId;
-  console.log(req.params);
   const result = await userServices.getDefaultProfileImage(userId)
   
   res.status(200).json({ result });
