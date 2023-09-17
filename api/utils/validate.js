@@ -1,12 +1,11 @@
 const validateEmailAndPassword = (phoneNumber, password) => {
-  const phoneNumberPattern = 
-  /^[0-9]{11}$/;
+  const phoneNumberPattern = /^[0-9]{11}$/;
 
-  const passwordRegex = 
-  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[$@$!%*?&])[A-Za-z\d$@$!%*?&]{10,}/;
+  const passwordRegex =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[$@$!%*?&])[A-Za-z\d$@$!%*?&]{10,}/;
 
   if (!phoneNumberPattern.test(phoneNumber)) {
-    const err = new Error("invalid email");
+    const err = new Error("invalid phone number");
     err.statusCode = 400;
     throw err;
   }
@@ -16,7 +15,15 @@ const validateEmailAndPassword = (phoneNumber, password) => {
 
     throw error;
   }
-  
 };
 
-module.exports = { validateEmailAndPassword } ;
+const validatePhoneNumber = (phoneNumber) => {
+  const phoneNumberPattern = /^[0-9]{11}$/;
+
+  if (!phoneNumberPattern.test(phoneNumber)) {
+    const err = new Error("invalid phone number");
+    err.statusCode = 400;
+    throw err;
+  }
+};
+module.exports = { validateEmailAndPassword, validatePhoneNumber };
