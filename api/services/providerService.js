@@ -1,6 +1,7 @@
 const providerDao = require("../models/providerDao");
 const request = require("request-promise");
 const { typeEnum } = require("../models/typeEnum");
+const { decrypt } = require("../utils/crypto");
 
 const getProvidersInfo = async (userID) => {
   let type;
@@ -48,7 +49,7 @@ const getUserFinances = async (userID, providerID) => {
 
     const options = {
       method: "POST",
-      uri: "http://10.58.52.73:3000/mydata/account",
+      uri: "http://10.58.52.75:3000/mydata/account",
       body: {
         CI: CI,
         providerIDs: ID,
@@ -56,12 +57,14 @@ const getUserFinances = async (userID, providerID) => {
       json: true,
     };
 
-    const response = await request(options);
+    const req = await request(options);
+    const response = decrypt(req.data);
 
     userFinances.map((providerInfo) => {
       providerInfo.items = [];
-      response.data.map((financeInfo) => {
+      response.map((financeInfo) => {
         if (providerInfo.providerID == financeInfo.providerID) {
+          delete providerInfo.providerID;
           providerInfo.items.push(financeInfo);
         }
       });
@@ -78,10 +81,10 @@ const getUserFinances = async (userID, providerID) => {
 };
 
 const postTransactions = async (userID, data) => {
-  try {
-    const CI = await getUserCI(userID);
+  const CI = await getUserCI(userID);
 
-    const getTransaction = data.map(async (obj) => {
+  await Promise.all(
+    data.map(async (obj) => {
       let providerID = obj.providerID;
       let financeNumber = obj.financeNumber;
       let financeName = obj.financeName;
@@ -95,7 +98,7 @@ const postTransactions = async (userID, data) => {
 
       const options = {
         method: "POST",
-        uri: "http://10.58.52.73:3000/mydata",
+        uri: "http://10.58.52.75:3000/mydata",
         body: {
           CI: CI,
           userFinancesId: userFinancesID,
@@ -107,22 +110,25 @@ const postTransactions = async (userID, data) => {
         simple: false,
       };
 
-      const response = await request(options);
+      const responseFromAccountTransaction = await request(options);
 
-      if (response.message == "NO_RECORDS") {
-        return;
+      if (responseFromAccountTransaction.message == "NO_RECORDS") {
+        const error = new Error("NO_RECORDS");
+        error.statusCode = 403;
+        throw error;
       }
 
-      const responseBody = response.data[0];
+      const res = decrypt(responseFromAccountTransaction.data);
+      const response = res[0];
 
-      const transactions = responseBody.map(async (obj) => {
+      response.map(async (obj) => {
         let amount = obj.amount;
         let transactionNote = obj.transactionNote;
         let categoryID = obj.categoryID;
         let isMonthly = obj.isMonthly;
         let createdAT = obj.createdAT;
 
-        const insertTransactions = await providerDao.insertTransactions(
+        await providerDao.insertTransactions(
           userFinancesID,
           amount,
           transactionNote,
@@ -131,12 +137,8 @@ const postTransactions = async (userID, data) => {
           createdAT
         );
       });
-    });
-  } catch {
-    const error = new Error("SERVICES_KEY_ERROR");
-    error.stausCode = 400;
-    throw error;
-  }
+    })
+  );
 };
 
 module.exports = {

@@ -14,4 +14,5 @@ providerRoutes.post(
   loginRequired,
   providerControllers.postTransactions
 );
+
 module.exports = providerRoutes;
