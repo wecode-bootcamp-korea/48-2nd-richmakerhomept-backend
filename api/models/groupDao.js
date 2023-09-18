@@ -121,7 +121,7 @@ const getGroupMain = async (groupId) => {
     UserNames AS (
         SELECT JSON_OBJECT(
             'userId', u.id,
-            'userName', u.user_name
+            'userImage', u.profile_image
         ) AS user_names
         FROM users u
         WHERE u.grouping_id = ?
