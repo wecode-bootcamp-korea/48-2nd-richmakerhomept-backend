@@ -32,7 +32,7 @@ const getMemberList = catchAsync(async (req, res) => {
     throw error;
   }
   const members = await groupService.getMemberList(userId);
-  res.status(200).json({ data: members });
+  res.status(200).json(members);
 });
 
 const getGroupMain = catchAsync(async (req, res) => {
@@ -46,4 +46,28 @@ const getGroupMain = catchAsync(async (req, res) => {
   res.status(200).json({ data: data });
 });
 
-module.exports = { addMember, sendInvitation, getMemberList, getGroupMain };
+const getSharedFinances = catchAsync(async (req, res) => {
+  const userId = req.user.id;
+  const { type, yearValue, monthValue, memberId } = req.query;
+  if (!userId) {
+    const error = new Error("KEY ERROR");
+    error.statusCode = 400;
+    throw error;
+  }
+  const banks = await groupService.getSharedFinances(
+    userId,
+    yearValue,
+    monthValue,
+    memberId,
+    type
+  );
+  res.status(200).json(banks);
+});
+
+module.exports = {
+  addMember,
+  sendInvitation,
+  getMemberList,
+  getGroupMain,
+  getSharedFinances,
+};

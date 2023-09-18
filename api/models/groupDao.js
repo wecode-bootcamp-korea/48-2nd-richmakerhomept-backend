@@ -151,6 +151,24 @@ const getGroupMain = async (groupId) => {
       (SELECT JSON_ARRAYAGG(finances) FROM Finances WHERE t = "c") AS cards;`,
       [groupId, groupId, groupId, groupId]
     );
+  } catch {
+    const error = new Error("dataSource Error");
+    error.statusCode = 400;
+    throw error;
+  }
+};
+const getMembers = async (groupId) => {
+  try {
+    const [data] = await AppDataSource.query(
+      `select
+    JSON_ARRAYAGG(JSON_OBJECT(
+      "userId", u.id,
+      "userName",u.user_name
+    )) as members
+  from users u
+  where grouping_id = ?;`,
+      [groupId]
+    );
     return data;
   } catch {
     const error = new Error("dataSource Error");
@@ -159,6 +177,47 @@ const getGroupMain = async (groupId) => {
   }
 };
 
+const getSharedFinances = async (
+  groupId,
+  filterByMonth,
+  filterByMember,
+  filterByType
+) => {
+  try {
+    const data = await AppDataSource.query(
+      `SELECT
+        providerName, providerImage,
+        sum(sm) as total,
+        JSON_ARRAYAGG(info) AS finances
+    FROM (
+        SELECT
+        p.provider_name AS providerName,
+        p.image_url as providerImage,
+        COALESCE(SUM(t.amount), 0) as sm,
+        JSON_OBJECT(
+            "userId", u.id,
+            "userProfile", u.profile_image,
+            "financeId", uf.id,
+            "financeNumber", uf.finance_number,
+            "sum", COALESCE(SUM(t.amount), 0)
+            ) as info
+        FROM user_finances uf
+        LEFT JOIN transactions t ON uf.id = t.user_finances_id
+        JOIN providers p ON uf.provider_id = p.id
+        JOIN users u ON u.id = uf.user_id
+        WHERE u.grouping_id = ? AND uf.is_shared = 1 ${filterByType} ${filterByMember} ${filterByMonth}
+        GROUP BY uf.provider_id, u.id, p.provider_name, uf.finance_number, uf.id
+    ) AS subquery
+    GROUP BY providerName,providerImage;`,
+      [groupId]
+    );
+    return { info: data };
+  } catch {
+    const error = new Error("dataSource Error");
+    error.statusCode = 400;
+    throw error;
+  }
+};
 module.exports = {
   sendInvitation,
   addMember,
@@ -166,4 +225,6 @@ module.exports = {
   getMemberCount,
   getMemberList,
   getGroupMain,
+  getSharedFinances,
+  getMembers,
 };

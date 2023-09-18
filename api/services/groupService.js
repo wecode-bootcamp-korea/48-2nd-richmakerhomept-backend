@@ -48,7 +48,6 @@ const getMemberList = async (userId) => {
 };
 
 const getGroupMain = async (userId) => {
-  const groupId = await groupDao.getGroupById(userId);
   if (!groupId) {
     const error = new Error("User doesn't have a group");
     error.statusCode = 400;
@@ -56,4 +55,39 @@ const getGroupMain = async (userId) => {
   }
   return await groupDao.getGroupMain(groupId);
 };
-module.exports = { sendInvitation, getMemberList, getGroupMain };
+const getSharedFinances = async (
+  userId,
+  yearValue,
+  monthValue,
+  memberId,
+  type
+) => {
+  const groupId = await groupDao.getGroupById(userId);
+  if (!groupId) {
+    const error = new Error("User doesn't have a group");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const filterByType = " AND p.type = " + type;
+  const filterByMember = memberId ? " AND u.id = " + memberId : "";
+  const filterByMonth =
+    yearValue && monthValue
+      ? " AND t.created_at LIKE " + '"' + yearValue + "-" + monthValue + '%"'
+      : "";
+  const membersObj = await groupDao.getMembers(groupId);
+  const dataObj = await groupDao.getSharedFinances(
+    groupId,
+    filterByMonth,
+    filterByMember,
+    filterByType
+  );
+  return { data: { ...membersObj, ...dataObj } };
+};
+
+module.exports = {
+  sendInvitation,
+  getMemberList,
+  getSharedFinances,
+  getGroupMain,
+};
