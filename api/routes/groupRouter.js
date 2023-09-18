@@ -1,8 +1,10 @@
 const express = require("express");
 const groupController = require("../controllers/groupController");
 const groupRouter = express.Router();
+const { loginRequired } = require("../utils/auth");
 
-groupRouter.post("/invitation", groupController.sendInvitation);
-groupRouter.get("/member", groupController.getMemberList);
+groupRouter.get("", loginRequired, groupController.getGroupMain);
+groupRouter.post("/invitation", loginRequired, groupController.sendInvitation);
+groupRouter.get("/member", loginRequired, groupController.getMemberList);
 
 module.exports = groupRouter;

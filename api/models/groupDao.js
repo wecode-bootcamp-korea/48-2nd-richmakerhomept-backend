@@ -96,10 +96,74 @@ const getMemberList = async (groupId) => {
   }
 };
 
+const getGroupMain = async (groupId) => {
+  try {
+    const [data] = await AppDataSource.query(
+      `WITH Finances AS (
+        SELECT
+            p.type AS t,
+            JSON_OBJECT(
+              'financeId',uf.id,
+                'userId', u.id,
+                'userImage', u.profile_image,
+                'providerImage', p.image_url,
+                'providerName', p.provider_name,
+                'financeNumber', uf.finance_number,
+                'amount', COALESCE(SUM(t.amount), 0)
+            ) AS finances
+        FROM user_finances uf
+        LEFT JOIN transactions t ON uf.id = t.user_finances_id
+        JOIN providers p ON uf.provider_id = p.id
+        JOIN users u ON u.id = uf.user_id
+        WHERE u.grouping_id = ? AND uf.is_shared = 1
+        GROUP BY uf.id, p.type
+    ),
+    UserNames AS (
+        SELECT JSON_OBJECT(
+            'userId', u.id,
+            'userName', u.user_name
+        ) AS user_names
+        FROM users u
+        WHERE u.grouping_id = ?
+    ),
+    DayCounts as(select DATEDIFF(CURRENT_TIMESTAMP,g.created_at) as dayCounts from groupings g where id = 1
+    ),
+    Expenses as(
+      select json_object("totalAmounts",coalesce(sum(t.amount),0), "totalCounts",count(t.id)) as totals
+      from transactions t
+      join user_finances uf on uf.id = t.user_finances_id
+      join users u on u.id = uf.user_id
+      where u.grouping_id = ? and uf.is_shared = 1 and amount < 0
+    ),
+    Incomes as(
+      select json_object("totalAmounts",coalesce(sum(t.amount),0), "totalCounts",count(t.id)) as totals
+      from transactions t
+      join user_finances uf on uf.id = t.user_finances_id
+      join users u on u.id = uf.user_id
+      where u.grouping_id = ? and uf.is_shared = 1 and amount > 0
+    )
+    SELECT
+      (select JSON_ARRAYAGG(user_names) FROM UserNames) AS members,
+      (select dayCounts from DayCounts) as dayCount,
+      (select totals from Incomes) as totalIncomes,
+      (select totals from Expenses) as totalExpenses,
+      (SELECT JSON_ARRAYAGG(finances) FROM Finances WHERE t = "b") AS banks,
+      (SELECT JSON_ARRAYAGG(finances) FROM Finances WHERE t = "c") AS cards;`,
+      [groupId, groupId, groupId, groupId]
+    );
+    return data;
+  } catch {
+    const error = new Error("dataSource Error");
+    error.statusCode = 400;
+    throw error;
+  }
+};
+
 module.exports = {
   sendInvitation,
   addMember,
   getGroupById,
   getMemberCount,
   getMemberList,
+  getGroupMain,
 };

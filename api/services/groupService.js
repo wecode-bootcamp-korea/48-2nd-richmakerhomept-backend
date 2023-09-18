@@ -1,5 +1,5 @@
 const groupDao = require("../models/groupDao");
-const { getUserByphoneNumber } = require("../models/userDao");
+const { getUserByPhoneNumber } = require("../models/userDao");
 const { validatePhoneNumber } = require("../utils/validate");
 
 const sendInvitation = async (userId, receiverPhoneNumber) => {
@@ -14,7 +14,7 @@ const sendInvitation = async (userId, receiverPhoneNumber) => {
       throw error;
     }
   }
-  const receiverId = await getUserByphoneNumber(receiverPhoneNumber)?.id;
+  const receiverId = await getUserByPhoneNumber(receiverPhoneNumber)?.id;
   if (!receiverId) {
     const error = new Error("User not signed up");
     error.statusCode = 404;
@@ -46,4 +46,14 @@ const getMemberList = async (userId) => {
   }
   return await groupDao.getMemberList(groupId);
 };
-module.exports = { sendInvitation, getMemberList };
+
+const getGroupMain = async (userId) => {
+  const groupId = await groupDao.getGroupById(userId);
+  if (!groupId) {
+    const error = new Error("User doesn't have a group");
+    error.statusCode = 400;
+    throw error;
+  }
+  return await groupDao.getGroupMain(groupId);
+};
+module.exports = { sendInvitation, getMemberList, getGroupMain };
