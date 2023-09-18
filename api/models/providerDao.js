@@ -46,8 +46,8 @@ const getProviderImageAndName = async (providerID) => {
   try {
     const [getProviderNameAndImage] = await AppDataSource.query(
       `SELECT 
-        providers.provider_name,
-        providers.image_url, 
+        providers.provider_name AS providerName,
+        providers.image_url AS imageUrl, 
         providers.id AS providerID
         FROM providers 
         WHERE id = ?`,
@@ -71,13 +71,14 @@ const insertUserFinances = async (
     const userFinancesId = await AppDataSource.query(
       `INSERT INTO 
         user_finances 
-        (user_id, provider_id,finance_number, finance_name)
+        (user_id, provider_id, finance_number, finance_name)
         values 
         (?,?,?,?)`,
       [userID, providerID, financeNumber, financeName]
     );
     return userFinancesId.insertId;
-  } catch {
+  } catch (err) {
+    console.log(err);
     const error = new Error("DATASOURCE_KEY_ERROR");
     error.stausCode = 400;
     throw error;
