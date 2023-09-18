@@ -144,7 +144,8 @@ const updateProfileImageURL = async(id,uploadedFileURL) =>{
       [uploadedFileURL, id]
     );
     return result
-  }catch{
+  }catch(error){
+    console.log(error)
     const eroor = new Error("URL dataSource ERROR");
     eroor.statusCode = 400;
     throw error;
@@ -153,6 +154,7 @@ const updateProfileImageURL = async(id,uploadedFileURL) =>{
 
 const getDefaultProfileImage  = async(userId) => {
   try{
+    console.log(userId)
     const result = await AppDataSource.query(
       `
       SELECT
