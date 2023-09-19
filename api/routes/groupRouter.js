@@ -13,5 +13,10 @@ groupRouter.patch(
   loginRequired,
   groupController.changeSharingStatus
 );
+groupRouter.get(
+  "/finance/management",
+  loginRequired,
+  groupController.getGroupFinanceManagement
+);
 
 module.exports = groupRouter;

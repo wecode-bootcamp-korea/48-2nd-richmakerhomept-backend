@@ -96,6 +96,44 @@ const getMemberList = async (groupId) => {
   }
 };
 
+const getGroupFinanceManagement = async (
+  groupId,
+  amount = "",
+  filterByMember,
+  filterByMonth
+) => {
+  try {
+    return await AppDataSource.query(
+      `
+    SELECT
+    t.is_monthly,JSON_OBJECT(
+     "tDate",date(t.created_at),
+     "amount", t.amount,
+     "userId", u.id,
+    "userImage",u.profile_image,
+    "provider",p.provider_name,
+    "providerImage",p.image_url,
+    "financeNumber",uf.finance_number,
+    "category",c.category_name,
+    "categoryImage" , c.image_url) as info
+     FROM transactions t
+     JOIN user_finances uf ON uf.id = t.user_finances_id
+     JOIN providers p ON uf.provider_id = p.id
+     JOIN users u ON u.id = uf.user_id
+     JOIN categories c on c.id = t.category_id
+     WHERE u.grouping_id = ? AND uf.is_shared = 1 ${amount}${filterByMember}${filterByMonth}
+     ORDER BY t.created_at DESC
+     ;
+ `,
+      [groupId]
+    );
+  } catch {
+    const error = new Error("dataSource Error");
+    error.statusCode = 400;
+    throw error;
+  }
+};
+
 const getGroupMain = async (groupId) => {
   try {
     const [data] = await AppDataSource.query(
@@ -278,4 +316,5 @@ module.exports = {
   getMembers,
   getFinanceList,
   changeSharingStatus,
+  getGroupFinanceManagement,
 };
