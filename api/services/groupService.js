@@ -135,6 +135,19 @@ const getGroupFinanceManagement = async (
   };
 };
 
+const withdrawFromGroup = async (userId) => {
+  const groupId = await groupDao.getGroupById(userId);
+  if (!groupId) {
+    const error = new Error("User doesn't have a group");
+    error.statusCode = 400;
+    throw error;
+  }
+  const memberCount = await groupDao.getMemberCount(groupId);
+  if (memberCount > 2) {
+    return await groupDao.withdrawFromGroup(userId, groupId);
+  }
+  return await groupDao.withdrawThenRemoveGroup(groupId);
+};
 module.exports = {
   sendInvitation,
   getMemberList,
@@ -144,4 +157,5 @@ module.exports = {
   getFinanceList,
   changeSharingStatus,
   getGroupFinanceManagement,
+  withdrawFromGroup,
 };

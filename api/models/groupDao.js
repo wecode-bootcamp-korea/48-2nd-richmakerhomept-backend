@@ -78,6 +78,62 @@ const addMember = async (userId, receiverId, groupId) => {
     throw error;
   }
 };
+const withdrawFromGroup = async (userId, groupId) => {
+  try {
+    await AppDataSource.query(
+      `update user_finances
+      set is_shared = 0
+      where user_id = ?;
+      `,
+      [userId]
+    );
+    await AppDataSource.query(
+      `
+      update users
+      set grouping_id = 0
+      where id = ?;`,
+      [userId]
+    );
+    await AppDataSource.query(
+      `
+      update groupings
+      set member_count = member_count -1
+      where id = ?;`,
+      [groupId]
+    );
+  } catch {
+    const error = new Error("dataSource Error");
+    error.statusCode = 400;
+    throw error;
+  }
+};
+
+const withdrawThenRemoveGroup = async (groupId) => {
+  try {
+    await AppDataSource.query(
+      `update user_finances
+      set is_shared = 0
+      where user_id IN (select id from users where grouping_id = ?);`,
+      [groupId]
+    );
+    await AppDataSource.query(
+      `
+    update users
+    set grouping_id = 0
+    where grouping_id = ?;`,
+      [groupId]
+    );
+    await AppDataSource.query(
+      `
+    delete from groupings where id = ?;`,
+      [groupId]
+    );
+  } catch {
+    const error = new Error("dataSource Error");
+    error.statusCode = 400;
+    throw error;
+  }
+};
 
 const getMemberList = async (groupId) => {
   try {
@@ -317,4 +373,6 @@ module.exports = {
   getFinanceList,
   changeSharingStatus,
   getGroupFinanceManagement,
+  withdrawFromGroup,
+  withdrawThenRemoveGroup,
 };
