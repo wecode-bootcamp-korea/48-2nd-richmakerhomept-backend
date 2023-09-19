@@ -54,14 +54,40 @@ const getSharedFinances = catchAsync(async (req, res) => {
     error.statusCode = 400;
     throw error;
   }
-  const banks = await groupService.getSharedFinances(
+  const finances = await groupService.getSharedFinances(
     userId,
     yearValue,
     monthValue,
     memberId,
     type
   );
-  res.status(200).json(banks);
+  res.status(200).json(finances);
+});
+const changeSharingStatus = catchAsync(async (req, res) => {
+  const userId = req.user.id;
+  if (!userId) {
+    const error = new Error("KEY ERROR");
+    error.statusCode = 400;
+    throw error;
+  }
+  const { isAll, financeIds } = req.body;
+  const changedRows = await groupService.changeSharingStatus(
+    userId,
+    isAll,
+    financeIds
+  );
+  res.status(200).json({ message: `${changedRows} finances updated` });
+});
+
+const getFinanceList = catchAsync(async (req, res) => {
+  const userId = req.user.id;
+  if (!userId) {
+    const error = new Error("KEY ERROR");
+    error.statusCode = 400;
+    throw error;
+  }
+  const data = await groupService.getFinanceList(userId);
+  res.status(200).json({ data: data });
 });
 
 module.exports = {
@@ -70,4 +96,6 @@ module.exports = {
   getMemberList,
   getGroupMain,
   getSharedFinances,
+  getFinanceList,
+  changeSharingStatus,
 };

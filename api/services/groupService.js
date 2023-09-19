@@ -48,6 +48,7 @@ const getMemberList = async (userId) => {
 };
 
 const getGroupMain = async (userId) => {
+  const groupId = await groupDao.getGroupById(userId);
   if (!groupId) {
     const error = new Error("User doesn't have a group");
     error.statusCode = 400;
@@ -55,6 +56,21 @@ const getGroupMain = async (userId) => {
   }
   return await groupDao.getGroupMain(groupId);
 };
+
+const getFinanceList = async (userId) => {
+  return await groupDao.getFinanceList(userId);
+};
+
+const changeSharingStatus = async (userId, isAll, financeIds) => {
+  if (isAll) return await groupDao.changeSharingStatus(userId, "1");
+  if (!financeIds) return await groupDao.changeSharingStatus(userId, "0");
+  return await groupDao.changeSharingStatus(
+    userId,
+    `(id IN (${financeIds}))`,
+    financeIds
+  );
+};
+
 const getSharedFinances = async (
   userId,
   yearValue,
@@ -90,4 +106,7 @@ module.exports = {
   getMemberList,
   getSharedFinances,
   getGroupMain,
+  getSharedFinances,
+  getFinanceList,
+  changeSharingStatus,
 };
