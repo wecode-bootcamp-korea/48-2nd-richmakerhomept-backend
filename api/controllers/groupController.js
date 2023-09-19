@@ -90,6 +90,23 @@ const getFinanceList = catchAsync(async (req, res) => {
   res.status(200).json({ data: data });
 });
 
+const getGroupFinanceManagement = catchAsync(async (req, res) => {
+  const userId = req.user.id;
+  const { monthValue, yearValue, memberId } = req.query;
+  if (!userId) {
+    const error = new Error("KEY ERROR");
+    error.statusCode = 400;
+    throw error;
+  }
+  const data = await groupService.getGroupFinanceManagement(
+    userId,
+    monthValue,
+    yearValue,
+    memberId
+  );
+  res.status(200).json({ data: data });
+});
+
 module.exports = {
   addMember,
   sendInvitation,
@@ -98,4 +115,5 @@ module.exports = {
   getSharedFinances,
   getFinanceList,
   changeSharingStatus,
+  getGroupFinanceManagement,
 };

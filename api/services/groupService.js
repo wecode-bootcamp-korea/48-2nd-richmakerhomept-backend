@@ -100,6 +100,40 @@ const getSharedFinances = async (
   );
   return { data: { ...membersObj, ...dataObj } };
 };
+const getGroupFinanceManagement = async (
+  userId,
+  monthValue = "",
+  yearValue,
+  memberId
+) => {
+  const groupId = await groupDao.getGroupById(userId);
+  if (!groupId || !yearValue) {
+    const error = new Error("key error");
+    error.statusCode = 400;
+    throw error;
+  }
+  const filterByMember = memberId ? " AND u.id = " + memberId : "";
+  const filterByMonth =
+    " AND t.created_at LIKE " + '"' + yearValue + "-" + monthValue + '%"';
+  const members = await groupDao.getMembers(groupId);
+  const incomes = await groupDao.getGroupFinanceManagement(
+    groupId,
+    " AND amount > 0",
+    filterByMember,
+    filterByMonth
+  );
+  const expenses = await groupDao.getGroupFinanceManagement(
+    groupId,
+    " AND amount < 0",
+    filterByMember,
+    filterByMonth
+  );
+  return {
+    ...members,
+    income: [...incomes],
+    expense: [...expenses],
+  };
+};
 
 module.exports = {
   sendInvitation,
@@ -109,4 +143,5 @@ module.exports = {
   getSharedFinances,
   getFinanceList,
   changeSharingStatus,
+  getGroupFinanceManagement,
 };
