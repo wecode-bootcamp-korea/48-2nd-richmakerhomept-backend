@@ -151,6 +151,7 @@ const getGroupMain = async (groupId) => {
       (SELECT JSON_ARRAYAGG(finances) FROM Finances WHERE t = "c") AS cards;`,
       [groupId, groupId, groupId, groupId]
     );
+    return data;
   } catch {
     const error = new Error("dataSource Error");
     error.statusCode = 400;
@@ -168,6 +169,54 @@ const getMembers = async (groupId) => {
   from users u
   where grouping_id = ?;`,
       [groupId]
+    );
+    return data;
+  } catch {
+    const error = new Error("dataSource Error");
+    error.statusCode = 400;
+    throw error;
+  }
+};
+const changeSharingStatus = async (userId, query) => {
+  try {
+    const { changedRows } = await AppDataSource.query(
+      `UPDATE user_finances
+      SET is_shared = ${query}
+      where user_id = ?;
+      `,
+      [userId]
+    );
+    return changedRows;
+  } catch {
+    const error = new Error("dataSource Error");
+    error.statusCode = 400;
+    throw error;
+  }
+};
+const getFinanceList = async (userId) => {
+  try {
+    const [data] = await AppDataSource.query(
+      `WITH Finances AS (
+        SELECT
+            p.type AS t,
+            JSON_OBJECT(
+              'financeId',uf.id,
+                'providerImage', p.image_url,
+                'providerName', p.provider_name,
+                'financeNumber', uf.finance_number,
+                'is_shared', uf.is_shared
+            ) AS finances
+        FROM user_finances uf
+        JOIN providers p ON uf.provider_id = p.id
+        JOIN users u ON u.id = uf.user_id
+        where u.id = ?
+        GROUP BY uf.id, uf.provider_id, p.type
+        order by p.provider_name ASC
+    )
+    SELECT
+      (select JSON_ARRAYAGG(finances) from Finances where t = "b") as banks,
+      (select JSON_ARRAYAGG(finances) from Finances where t = "c") as cards;`,
+      [userId]
     );
     return data;
   } catch {
@@ -227,4 +276,6 @@ module.exports = {
   getGroupMain,
   getSharedFinances,
   getMembers,
+  getFinanceList,
+  changeSharingStatus,
 };
