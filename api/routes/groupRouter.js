@@ -18,6 +18,11 @@ groupRouter.get(
   loginRequired,
   groupController.getGroupFinanceManagement
 );
+groupRouter.get(
+  "/finance/:financeId",
+  loginRequired,
+  groupController.getFinanceDetail
+);
 
 groupRouter.delete("", loginRequired, groupController.withdrawFromGroup);
 module.exports = groupRouter;

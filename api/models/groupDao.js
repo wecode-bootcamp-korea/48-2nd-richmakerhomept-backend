@@ -134,6 +134,33 @@ const withdrawThenRemoveGroup = async (groupId) => {
     throw error;
   }
 };
+const getFinanceDetail = async (financeId, filteringQuery = "") => {
+  try {
+    return await AppDataSource.query(
+      `SELECT
+    p.image_url as providerImage,
+    p.provider_name as provider,
+    uf.finance_number as financeNumber,
+    c.image_url as categoryImage,
+    day(t.created_at) as tDay,
+    month(t.created_at) as tMonth,
+    year(t.created_at) as tYear,
+    t.transaction_note as note,
+    t.amount
+  FROM transactions t
+  JOIN categories c ON t.category_id = c.id
+  JOIN user_finances uf ON t.user_finances_id = uf.id
+  JOIN providers p ON uf.provider_id = p.id
+  where uf.id = ? ${filteringQuery}
+  ORDER BY t.created_at DESC;`,
+      [financeId]
+    );
+  } catch {
+    const error = new Error("dataSource Error");
+    error.statusCode = 400;
+    throw error;
+  }
+};
 
 const getMemberList = async (groupId) => {
   try {
@@ -375,4 +402,5 @@ module.exports = {
   getGroupFinanceManagement,
   withdrawFromGroup,
   withdrawThenRemoveGroup,
+  getFinanceDetail,
 };

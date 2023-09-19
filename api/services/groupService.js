@@ -46,6 +46,14 @@ const getMemberList = async (userId) => {
   }
   return await groupDao.getMemberList(groupId);
 };
+const getFinanceDetail = async (financeId, yearValue, monthValue = "") => {
+  if (!yearValue) {
+    return await groupDao.getFinanceDetail(financeId);
+  }
+  const filteringQuery =
+    " AND t.created_at LIKE " + '"' + yearValue + "-" + monthValue + '%"';
+  return await groupDao.getFinanceDetail(financeId, filteringQuery);
+};
 
 const getGroupMain = async (userId) => {
   const groupId = await groupDao.getGroupById(userId);
@@ -158,4 +166,5 @@ module.exports = {
   changeSharingStatus,
   getGroupFinanceManagement,
   withdrawFromGroup,
+  getFinanceDetail,
 };
