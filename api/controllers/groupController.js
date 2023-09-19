@@ -107,6 +107,17 @@ const getGroupFinanceManagement = catchAsync(async (req, res) => {
   res.status(200).json({ data: data });
 });
 
+const withdrawFromGroup = catchAsync(async (req, res) => {
+  const userId = req.user.id;
+  if (!userId) {
+    const error = new Error("KEY ERROR");
+    error.statusCode = 400;
+    throw error;
+  }
+  await groupService.withdrawFromGroup(userId);
+  res.status(200).json({ message: "successfully withdrew from group" });
+});
+
 module.exports = {
   addMember,
   sendInvitation,
@@ -116,4 +127,5 @@ module.exports = {
   getFinanceList,
   changeSharingStatus,
   getGroupFinanceManagement,
+  withdrawFromGroup,
 };

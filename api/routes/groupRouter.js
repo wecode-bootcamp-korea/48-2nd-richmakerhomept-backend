@@ -19,4 +19,5 @@ groupRouter.get(
   groupController.getGroupFinanceManagement
 );
 
+groupRouter.delete("", loginRequired, groupController.withdrawFromGroup);
 module.exports = groupRouter;
