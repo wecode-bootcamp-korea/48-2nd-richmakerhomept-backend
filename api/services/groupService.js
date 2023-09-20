@@ -3,39 +3,37 @@ const { getUserByPhoneNumber } = require("../models/userDao");
 const { validatePhoneNumber } = require("../utils/validate");
 
 const sendInvitation = async (userId, receiverPhoneNumber) => {
-  validatePhoneNumber(receiverPhoneNumber);
+  try {
+    validatePhoneNumber(receiverPhoneNumber);
 
-  const groupId = await groupDao.getGroupById(userId);
-  if (groupId) {
-    const memberCount = await groupDao.getMemberCount(groupId);
-    if (memberCount >= 5) {
-      const error = new Error("Exceeds maximum member count: 5");
-      error.statusCode = 400;
+    const groupId = await groupDao.getGroupById(userId);
+    console.log(groupId)
+    if (groupId) {
+      const memberCount = await groupDao.getMemberCount(groupId);
+      if (memberCount >= 5) {
+        const error = new Error("Exceeds maximum member count: 5");
+        error.statusCode = 400;
+        throw error;
+      }
+    }
+
+      const receiverData = await getUserByPhoneNumber(receiverPhoneNumber);
+      const receiverId = receiverData ? receiverData.id : null;
+      console.log(receiverId);
+
+      if (typeof receiverData === "undefined") {
+        const error = new Error("Phone number not found");
+        error.statusCode = 203;
+        throw error;
+      }
+      const result = await groupDao.sendInvitation(userId, receiverId);
+      const group = await groupDao.addMember(userId, receiverId, groupId);
+
+      return { result, group };
+    } catch (error) {
       throw error;
     }
-  }
-  const receiverId = await getUserByPhoneNumber(receiverPhoneNumber)?.id;
-  if (!receiverId) {
-    const error = new Error("User not signed up");
-    error.statusCode = 404;
-    throw error;
-  }
-
-  const receiverGroupId = await groupDao.getGroupById(receiverId);
-  if (receiverGroupId === groupId) {
-    const error = new Error("The user is already a member");
-    error.statusCode = 400;
-    throw error;
-  }
-  if (receiverGroupId) {
-    const error = new Error("The user is in other groups");
-    error.statusCode = 400;
-    throw error;
-  }
-
-  await groupDao.sendInvitation(userId, receiverId);
-  await groupDao.addMember(userId, receiverId, groupId);
-};
+  };
 
 const getMemberList = async (userId) => {
   const groupId = await groupDao.getGroupById(userId);
@@ -46,23 +44,18 @@ const getMemberList = async (userId) => {
   }
   return await groupDao.getMemberList(groupId);
 };
-const getFinanceDetail = async (financeId, yearValue, monthValue = "") => {
-  if (!yearValue) {
-    return await groupDao.getFinanceDetail(financeId);
-  }
-  const filteringQuery =
-    " AND t.created_at LIKE " + '"' + yearValue + "-" + monthValue + '%"';
+
+const getFinanceDetail = async (financeId, yearValue, monthValue) => {
+  const filteringQuery = yearValue && monthValue 
+    ? ` AND t.created_at LIKE '${yearValue}-${monthValue}%'`
+    : '';
   return await groupDao.getFinanceDetail(financeId, filteringQuery);
 };
 
 const getGroupMain = async (userId) => {
   const groupId = await groupDao.getGroupById(userId);
-  if (!groupId) {
-    const error = new Error("User doesn't have a group");
-    error.statusCode = 400;
-    throw error;
-  }
-  return await groupDao.getGroupMain(groupId);
+  const result = await groupDao.getGroupMain(groupId);
+  return {groupId, result};
 };
 
 const getFinanceList = async (userId) => {
@@ -105,6 +98,7 @@ const getSharedFinances = async (
     filterByMember,
     filterByType
   );
+
   return { data: { ...membersObj, ...dataObj } };
 };
 const getGroupFinanceManagement = async (
@@ -155,6 +149,22 @@ const withdrawFromGroup = async (userId) => {
   }
   return await groupDao.withdrawThenRemoveGroup(groupId);
 };
+
+
+const getcardMemberList = async (userId) => {
+  const groupId = await groupDao.getGroupById(userId);
+  if (!groupId) {
+    const error = new Error("User doesn't have a group");
+    error.statusCode = 400;
+    throw error;
+  }
+  return await groupDao.getMemberList(groupId);
+};
+
+  const getcardFinanceDetail = async (financeId, yearValue, monthValue) => {
+
+  return await groupDao.getCardFinanceDetail(financeId, yearValue, monthValue);
+};
 module.exports = {
   sendInvitation,
   getMemberList,
@@ -166,4 +176,6 @@ module.exports = {
   getGroupFinanceManagement,
   withdrawFromGroup,
   getFinanceDetail,
+  getcardMemberList,
+  getcardFinanceDetail
 };

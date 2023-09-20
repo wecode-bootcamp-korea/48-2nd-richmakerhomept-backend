@@ -46,10 +46,9 @@ const getUserFinances = async (userID, providerID) => {
     }
     let userFinances;
     userFinances = await getProviderImageAndName(ID);
-
     const options = {
       method: "POST",
-      uri: "http://10.58.52.75:3000/mydata/account",
+      uri: "http://10.58.52.167:3001/mydata/account/",
       body: {
         CI: CI,
         providerIDs: ID,
@@ -73,7 +72,7 @@ const getUserFinances = async (userID, providerID) => {
     console.dir(userFinances, { depth: null });
 
     return userFinances;
-  } catch {
+  } catch{
     const error = new Error("SERVICES_KEY_ERROR");
     error.stausCode = 400;
     throw error;
@@ -98,7 +97,7 @@ const postTransactions = async (userID, data) => {
 
       const options = {
         method: "POST",
-        uri: "http://10.58.52.75:3000/mydata",
+        uri: "http://10.58.52.167:3001/mydata",
         body: {
           CI: CI,
           userFinancesId: userFinancesID,
@@ -120,7 +119,6 @@ const postTransactions = async (userID, data) => {
 
       const res = decrypt(responseFromAccountTransaction.data);
       const response = res[0];
-
       response.map(async (obj) => {
         let amount = obj.amount;
         let transactionNote = obj.transactionNote;

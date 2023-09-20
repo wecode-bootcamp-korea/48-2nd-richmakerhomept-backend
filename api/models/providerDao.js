@@ -19,7 +19,7 @@ const getProvidersInfo = async (userID, type) => {
     );
     return providersInfo;
   } catch {
-    const error = new Error("DATASOURCE_KEY_ERROR");
+    const error = new Error("DATASOURCE_KEY_ERROR 1");
     error.stausCode = 400;
     throw error;
   }
@@ -36,7 +36,7 @@ const getUserCI = async (userID) => {
     );
     return getUserCI;
   } catch {
-    const error = new Error("DATASOURCE_KEY_ERROR");
+    const error = new Error("DATASOURCE_KEY_ERROR 2");
     error.stausCode = 400;
     throw error;
   }
@@ -55,7 +55,7 @@ const getProviderImageAndName = async (providerID) => {
     );
     return getProviderNameAndImage;
   } catch {
-    const error = new Error("DATASOURCE_KEY_ERROR");
+    const error = new Error("DATASOURCE_KEY_ERROR 3");
     error.stausCode = 400;
     throw error;
   }
@@ -77,9 +77,8 @@ const insertUserFinances = async (
       [userID, providerID, financeNumber, financeName]
     );
     return userFinancesId.insertId;
-  } catch (err) {
-    console.log(err);
-    const error = new Error("DATASOURCE_KEY_ERROR");
+  } catch{
+    const error = new Error("DATASOURCE_KEY_ERROR 4");
     error.stausCode = 400;
     throw error;
   }
@@ -94,6 +93,7 @@ const insertTransactions = async (
   createdAT
 ) => {
   try {
+
     await AppDataSource.query(
       `insert into 
         transactions 
@@ -114,8 +114,8 @@ const insertTransactions = async (
         createdAT.replace("T", " ").replace("Z", ""),
       ]
     );
-  } catch {
-    const error = new Error("DATASOURCE_KEY_ERROR");
+  } catch{
+    const error = new Error("DATASOURCE_KEY_ERROR 5");
     error.stausCode = 400;
     throw error;
   }

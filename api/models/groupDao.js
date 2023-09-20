@@ -1,3 +1,4 @@
+const { SimpleConsoleLogger } = require("typeorm");
 const { AppDataSource } = require("./dataSource");
 
 const getMemberCount = async (groupId) => {
@@ -10,44 +11,66 @@ const getMemberCount = async (groupId) => {
     );
     return memberCount;
   } catch {
-    const err = new Error("datasource error");
-    err.statusCode = 400;
-    throw err;
+    const error = new Error("datasource error");
+    error.statusCode = 400;
+    throw error;
   }
 };
 
 const sendInvitation = async (userId, receiverId, status = 1) => {
   try {
+    let groupId = null;
+    if (userId === null && receiverId === null) {
+      groupId = await createGroup();
+    }
+
     const { insertId } = await AppDataSource.query(
-      `insert into invitations(inviter_id, receiver_id, status) values(?,?,?);`,
+      `INSERT INTO invitations(inviter_id, receiver_id, status) VALUES (?, ?, ?);`,
       [userId, receiverId, status]
     );
+    if (groupId !== null) {
+      await AppDataSource.query(
+        `UPDATE users SET grouping_id = ? WHERE id = ? OR id = ?`,
+        [groupId, userId, receiverId]
+      );
+    }
     return insertId;
-  } catch {
-    const err = new Error("datasource error");
-    err.statusCode = 400;
-    throw err;
+  } catch{
+    const error = new Error("datasource error");
+    error.statusCode = 400;
+    throw error;
   }
 };
 
 const getGroupById = async (userId) => {
   try {
-    const [{ groupId }] = await AppDataSource.query(
-      `select grouping_id as groupId
+    const [{ groupId}] = await AppDataSource.query(
+      `select 
+      grouping_id as groupId,
+      profile_image
         from users
         where id = ?`,
       [userId]
     );
     return groupId;
-  } catch {
-    const err = new Error("datasource error");
-    err.statusCode = 400;
-    throw err;
+  } catch{
+    const error = new Error("datasource error");
+    error.statusCode = 400;
+    throw error;
   }
 };
 
 const addMember = async (userId, receiverId, groupId) => {
   try {
+    if (userId === null && receiverId === null) {
+
+      await AppDataSource.query(
+        `UPDATE groupings SET id = id + 1 WHERE id = ?`,
+        [groupId]
+      );
+      return; 
+    }
+
     if (groupId) {
       await AppDataSource.query(
         `update users
@@ -59,7 +82,7 @@ const addMember = async (userId, receiverId, groupId) => {
         `update groupings
             set member_count = member_count + 1
             where id = ?`,
-        [groupId, receiverId, groupId]
+        [groupId]
       );
     } else {
       const { insertId } = await AppDataSource.query(
@@ -78,6 +101,7 @@ const addMember = async (userId, receiverId, groupId) => {
     throw error;
   }
 };
+
 const withdrawFromGroup = async (userId, groupId) => {
   try {
     await AppDataSource.query(
@@ -134,33 +158,74 @@ const withdrawThenRemoveGroup = async (groupId) => {
     throw error;
   }
 };
+
 const getFinanceDetail = async (financeId, filteringQuery = "") => {
   try {
-    return await AppDataSource.query(
+    const currentYear = new Date().getFullYear();
+    const startDate = `${currentYear}-01-01`;
+    const endDate = new Date().toISOString().split('T')[0];
+    
+    const details = await AppDataSource.query(
       `SELECT
-    p.image_url as providerImage,
-    p.provider_name as provider,
-    uf.finance_number as financeNumber,
-    c.image_url as categoryImage,
-    day(t.created_at) as tDay,
-    month(t.created_at) as tMonth,
-    year(t.created_at) as tYear,
-    t.transaction_note as note,
-    t.amount
-  FROM transactions t
-  JOIN categories c ON t.category_id = c.id
-  JOIN user_finances uf ON t.user_finances_id = uf.id
-  JOIN providers p ON uf.provider_id = p.id
-  where uf.id = ? ${filteringQuery}
-  ORDER BY t.created_at DESC;`,
-      [financeId]
+        p.image_url as providerImage,
+        p.provider_name as provider,
+        uf.finance_number as financeNumber,
+        c.image_url as categoryImage,
+        day(t.created_at) as tDay,
+        month(t.created_at) as tMonth,
+        year(t.created_at) as tYear,
+        t.transaction_note as note,
+        t.amount
+      FROM transactions t
+      JOIN categories c ON t.category_id = c.id
+      JOIN user_finances uf ON t.user_finances_id = uf.id
+      JOIN providers p ON uf.provider_id = p.id
+      WHERE uf.id = ? AND t.created_at BETWEEN ? AND ? ${filteringQuery}
+      ORDER BY t.created_at DESC;`,
+      [financeId, startDate, endDate]
     );
-  } catch {
+
+    const [total] = await AppDataSource.query(
+      `SELECT SUM(t.amount) as totalAmount
+      FROM transactions t
+      JOIN user_finances uf ON t.user_finances_id = uf.id
+      WHERE uf.id = ? AND t.created_at BETWEEN ? AND ?;`,
+      [financeId, startDate, endDate]
+    );
+
+    const firstDetail = details[0];
+    const commonInfo = {
+      providerImage: firstDetail.providerImage,
+      provider: firstDetail.provider,
+      financeNumber: firstDetail.financeNumber,
+      categoryImage: firstDetail.categoryImage,
+    };
+
+    const transactions = details.map((transaction) => {
+      return {
+        note: transaction.note,
+        amount: transaction.amount,
+        tDay: transaction.tDay,
+        tMonth: transaction.tMonth,
+        tYear: transaction.tYear,
+      };
+    });
+
+    const result = {
+      commonInfo,
+      transactions,
+      ...total
+    };
+
+    return result;
+
+  } catch{
     const error = new Error("dataSource Error");
     error.statusCode = 400;
     throw error;
   }
 };
+
 
 const getMemberList = async (groupId) => {
   try {
@@ -190,24 +255,24 @@ const getGroupFinanceManagement = async (
       `
     SELECT
     t.is_monthly,JSON_OBJECT(
-     "tDate",date(t.created_at),
-     "amount", t.amount,
-     "userId", u.id,
+    "tDate",date(t.created_at),
+    "amount", t.amount,
+    "userId", u.id,
     "userImage",u.profile_image,
     "provider",p.provider_name,
     "providerImage",p.image_url,
     "financeNumber",uf.finance_number,
     "category",c.category_name,
     "categoryImage" , c.image_url) as info
-     FROM transactions t
-     JOIN user_finances uf ON uf.id = t.user_finances_id
-     JOIN providers p ON uf.provider_id = p.id
-     JOIN users u ON u.id = uf.user_id
-     JOIN categories c on c.id = t.category_id
-     WHERE u.grouping_id = ? AND uf.is_shared = 1 ${amount}${filterByMember}${filterByMonth}
-     ORDER BY t.created_at DESC
-     ;
- `,
+    FROM transactions t
+    JOIN user_finances uf ON uf.id = t.user_finances_id
+    JOIN providers p ON uf.provider_id = p.id
+    JOIN users u ON u.id = uf.user_id
+    JOIN categories c on c.id = t.category_id
+    WHERE u.grouping_id = ? AND uf.is_shared = 1 ${amount}${filterByMember}${filterByMonth}
+    ORDER BY t.created_at DESC
+    ;
+`,
       [groupId]
     );
   } catch {
@@ -357,7 +422,7 @@ const getSharedFinances = async (
     const data = await AppDataSource.query(
       `SELECT
         providerName, providerImage,
-        sum(sm) as total,
+        ROUND(sum(sm), 0) as total,
         JSON_ARRAYAGG(info) AS finances
     FROM (
         SELECT
@@ -382,12 +447,79 @@ const getSharedFinances = async (
       [groupId]
     );
     return { info: data };
-  } catch {
-    const error = new Error("dataSource Error");
+  } catch{
+    const error = new Error("dataSource Error 1");
     error.statusCode = 400;
     throw error;
+  }ㅋㅋㅋ
+};
+
+const getCardFinanceDetail = async (financeId, yearValue, monthValue) => {
+  
+  const startDate = `${yearValue}-${monthValue}-01`;
+  const endDate = new Date(yearValue, monthValue, 0).toISOString().slice(0, 10);
+
+  try {
+      const details = await AppDataSource.query(
+`SELECT
+  p.image_url as providerImage,
+  p.provider_name as provider,
+  uf.finance_number as financeNumber,
+  c.image_url as categoryImage,
+  day(t.created_at) as tDay,
+  month(t.created_at) as tMonth,
+  year(t.created_at) as tYear,
+  t.transaction_note as note,
+  t.amount
+FROM transactions t
+JOIN categories c ON t.category_id = c.id
+JOIN user_finances uf ON t.user_finances_id = uf.id
+JOIN providers p ON uf.provider_id = p.id
+WHERE uf.id = ? AND t.created_at BETWEEN ? AND ?
+ORDER BY t.created_at DESC;`,
+      [financeId, startDate, endDate]
+      );
+
+      const [total] = await AppDataSource.query(
+`SELECT SUM(t.amount) as totalAmount
+FROM transactions t
+JOIN user_finances uf ON t.user_finances_id = uf.id
+WHERE uf.id = ? AND t.created_at BETWEEN ? AND ?;`,
+      [financeId, startDate, endDate]
+      );
+
+      if (!details.length) {
+          throw new Error("No details found");
+      }
+      const firstDetail = details[0];
+      const commonInfo = {
+          providerImage: firstDetail.providerImage,
+          provider: firstDetail.provider,
+          financeNumber: firstDetail.financeNumber,
+          categoryImage: firstDetail.categoryImage,
+      };
+
+      const transactions = details.map((transaction) => ({
+          note: transaction.note,
+          amount: transaction.amount,
+          tDay: transaction.tDay,
+          tMonth: transaction.tMonth,
+          tYear: transaction.tYear,
+      }));
+
+      const result = {
+          commonInfo,
+          transactions,
+          ...total
+      };
+      console.log(result);
+      return result;
+
+  } catch{
+      throw new Error("Database Error");
   }
 };
+
 module.exports = {
   sendInvitation,
   addMember,
@@ -403,4 +535,5 @@ module.exports = {
   withdrawFromGroup,
   withdrawThenRemoveGroup,
   getFinanceDetail,
+  getCardFinanceDetail
 };

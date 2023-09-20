@@ -46,7 +46,7 @@ const getCIByPhoneNumber = catchAsync(async (req, res) => {
   const { phoneNumber } = req.body;
     const options = {
       method: 'POST',
-      uri: 'http://10.58.52.62:3000/auth',
+      uri: 'http://10.58.52.167:3001/auth',
       body: {
         phoneNumber: phoneNumber
       },
@@ -86,16 +86,18 @@ const signIn = catchAsync(async (req, res) => {
     throw error;
   }
 
-  const { accessToken, userName, profileImage , id} = await userServices.signIn(
+  const { accessToken, userName, profileImage , id, grouping_id} = await userServices.signIn(
     phoneNumber,
     password,
   );
+  
   res.status(201).json({
     id: id,
     accessToken: accessToken,
+    grouping_id: grouping_id,
     userName: userName,
     phoneNumber: phoneNumber,
-    profileImage: profileImage,
+    profileImage: profileImage
   });
 });
 
