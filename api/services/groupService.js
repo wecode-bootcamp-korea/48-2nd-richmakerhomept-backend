@@ -95,10 +95,9 @@ const getSharedFinances = async (
 
   const filterByType = " AND p.type = " + type;
   const filterByMember = memberId ? " AND u.id = " + memberId : "";
-  const filterByMonth =
-    yearValue && monthValue
-      ? " AND t.created_at LIKE " + '"' + yearValue + "-" + monthValue + '%"'
-      : "";
+  const filterByMonth = yearValue
+    ? " AND t.created_at LIKE " + '"' + yearValue + "-" + monthValue + '%"'
+    : "";
   const membersObj = await groupDao.getMembers(groupId);
   const dataObj = await groupDao.getSharedFinances(
     groupId,

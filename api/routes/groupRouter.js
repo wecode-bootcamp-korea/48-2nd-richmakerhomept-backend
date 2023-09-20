@@ -19,7 +19,7 @@ groupRouter.get(
   groupController.getGroupFinanceManagement
 );
 groupRouter.get(
-  "/finance/:financeId",
+  "/finance/detail",
   loginRequired,
   groupController.getFinanceDetail
 );
