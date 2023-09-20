@@ -22,13 +22,14 @@ const presignIn = async (phoneNumber) => {
   return phoneNumberCheck;
 };
 
-const signUp = async (userName, password, phoneNumber) => {
+const signUp = async (userName, phoneNumber,password, CI) => {
   validateEmailAndPassword(phoneNumber, password);
   const hashedPassword = await hashPassword(password);
   const createUser = await userDao.createUser(
-    userName,
-    phoneNumber,
-    hashedPassword
+    userName, 
+    phoneNumber, 
+    hashedPassword, 
+    CI
   );
 
   return createUser;
