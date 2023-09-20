@@ -10,7 +10,7 @@ const selectProviders = catchAsync(async (req, res) => {
     throw error;
   }
   const providersInfo = await providerServices.getProvidersInfo(user.id);
-  res.status(201).json(providersInfo);
+  res.status(201).json(providersInfo, {message: "SUCCESS CREATED"});
 });
 
 const getUserFinances = catchAsync(async (req, res) => {
@@ -33,7 +33,6 @@ const postTransactions = async (req, res) => {
   try {
     const data = req.body.data;
     const user = req.user;
-
     if (!user.id || !data) {
       const error = new Error("NOT INFO");
       error.statusCode = 404;
@@ -43,7 +42,6 @@ const postTransactions = async (req, res) => {
     await providerServices.postTransactions(user.id, data);
     res.status(200).json({ message: "SUCCESS CREATED" });
   } catch (err) {
-    console.log(err);
     res.status(err.statusCode || 500).json({
       message: err.message,
     });

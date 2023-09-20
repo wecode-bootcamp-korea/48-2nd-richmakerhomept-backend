@@ -49,21 +49,22 @@ const signIn = async (phoneNumber, password) => {
 
   if (!isMatched) {
     const error = new Error("INVALID_PASSWORD");
-    error.statusCode = 401;
+    error.statusCode = 204;
 
     throw error;
   }
   const accessToken = jwt.sign(
-    { id: user.id, phoneNumber: user.phoneNumber, userName: user.userName },
+    { id: user.id, phoneNumber: user.phoneNumber, grouping_id: user.grouping_id, userName: user.userName},
     process.env.JWT_SECRET,
     {
       algorithm: process.env.ALGORITHM,
       expiresIn: process.env.JWT_EXPIRES_IN,
     }
-  );
-  return {
+    );
+    return {
     id: user.id,
     accessToken, 
+    grouping_id: user.grouping_id,
     userName: user.user_name,
     profileImage: user.profile_image,
   };

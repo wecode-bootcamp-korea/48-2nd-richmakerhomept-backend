@@ -15,6 +15,7 @@ const addMember = catchAsync(async (req, res) => {
 const sendInvitation = catchAsync(async (req, res) => {
   const userId = req.user.id;
   const { receiverPhoneNumber } = req.body;
+
   if (!userId || !receiverPhoneNumber) {
     const error = new Error("KEY ERROR");
     error.statusCode = 400;
@@ -42,9 +43,11 @@ const getGroupMain = catchAsync(async (req, res) => {
     error.statusCode = 400;
     throw error;
   }
-  const data = await groupService.getGroupMain(userId);
-  res.status(200).json({ data: data });
+  const {groupId, result} = await groupService.getGroupMain(userId);
+
+  res.status(200).json({groupId, result});
 });
+
 const getFinanceDetail = catchAsync(async (req, res) => {
   const { financeId, yearValue, monthValue } = req.query;
   if (!financeId) {
@@ -57,7 +60,7 @@ const getFinanceDetail = catchAsync(async (req, res) => {
     yearValue,
     monthValue
   );
-  res.status(200).json({ data: data });
+  res.status(200).json({ data: [data] });
 });
 
 const getSharedFinances = catchAsync(async (req, res) => {
@@ -85,6 +88,7 @@ const changeSharingStatus = catchAsync(async (req, res) => {
     throw error;
   }
   const { isAll, financeIds } = req.body;
+
   const changedRows = await groupService.changeSharingStatus(
     userId,
     isAll,
@@ -122,7 +126,8 @@ const getGroupFinanceManagement = catchAsync(async (req, res) => {
 });
 
 const withdrawFromGroup = catchAsync(async (req, res) => {
-  const userId = req.user.id;
+  const userId = req.params.userId
+
   if (!userId) {
     const error = new Error("KEY ERROR");
     error.statusCode = 400;
@@ -130,6 +135,18 @@ const withdrawFromGroup = catchAsync(async (req, res) => {
   }
   await groupService.withdrawFromGroup(userId);
   res.status(200).json({ message: "successfully withdrew from group" });
+});
+
+const getcardFinanceDetail = catchAsync(async (req, res) => {
+  const { financeId, yearValue, monthValue} = req.query;
+  console.log(req);
+  console.log(financeId, yearValue, monthValue)
+  if (!yearValue || !monthValue) {
+      return res.status(400).json({ message: "Year and month are required." });
+  }
+      const result = await groupService.getcardFinanceDetail(financeId, yearValue, monthValue);
+      return res.status(200).json(result);
+
 });
 
 module.exports = {
@@ -143,4 +160,5 @@ module.exports = {
   getGroupFinanceManagement,
   withdrawFromGroup,
   getFinanceDetail,
+  getcardFinanceDetail
 };

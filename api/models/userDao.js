@@ -24,7 +24,6 @@ const createUser = async (userName, phoneNumber, hashedPassword, CI) => {
     const result = await AppDataSource.query(
       `
         INSERT INTO users (
-          CI,
           user_name, 
           phone_number,
           password,
@@ -54,6 +53,7 @@ const getUserByPhoneNumber = async (phoneNumber) => {
         SELECT
           id,
           user_name,
+          grouping_id,
           phone_number,
           profile_image,
           password
@@ -147,8 +147,8 @@ const updateProfileImageURL = async(id,uploadedFileURL) =>{
     );
     return result
   }catch{
-    const eroor = new Error("URL dataSource ERROR");
-    eroor.statusCode = 400;
+    const error = new Error("URL dataSource ERROR");
+    error.statusCode = 400;
     throw error;
   }
 }
