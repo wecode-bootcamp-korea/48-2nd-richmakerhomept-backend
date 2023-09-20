@@ -65,21 +65,18 @@ const getCIByPhoneNumber = catchAsync(async (req, res) => {
 });
 
 const signUp = catchAsync(async (req, res) => {
-  const { userName, password, phoneNumber } = req.body;
-  if (!userName || !password || !phoneNumber) {
+  const { userName, phoneNumber,password, CI} = req.body;
+  if (!userName || !password || !phoneNumber|| !CI) {
     const error = new Error("KEY ERROR");
     error.statusCode = 400;
     throw error;
   }
-
   const membership =  await userServices.signUp(
-    CI,
-    userName,
-    password,
-    phoneNumber
+    userName, phoneNumber,password, CI
   );
   res.status(200).json({ message: "user is created" });
 });
+
 
 const signIn = catchAsync(async (req, res) => {
   const { phoneNumber, password } = req.body;
