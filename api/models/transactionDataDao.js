@@ -56,6 +56,7 @@ const getTransactionDataByExpenses = async (userId, monthValue, monthlyQuery) =>
 
 const getFinanceDataByExpensesandCategory = async (userId, categoryId, yearValue, monthValue) => {
     try {
+      console.log(categoryId)
       const [ result ] = await AppDataSource.query( 
           `
         SELECT
@@ -67,13 +68,10 @@ const getFinanceDataByExpensesandCategory = async (userId, categoryId, yearValue
           LEFT JOIN categories AS c ON t.category_id = c.id
         WHERE u.id = ? AND t.amount < 0 AND t.category_id = ?
           AND YEAR(t.created_at) = ? AND MONTH(t.created_at) = ?
-        GROUP BY t.category_id
-        ORDER BY amountSum DESC;
+        GROUP BY t.category_id;
             `,
         [userId, categoryId, yearValue, monthValue]
        );
-      console.log(result.categoryId + "ll ");
-      console.log("ctrgory "+ result);
 
       return result;
     } catch (err) {

@@ -33,29 +33,27 @@ const getFinanceDataByExpensesandCategory = async (userId, yearValue, monthValue
   
   const categories = [1,2,3,4,5,6,7,8,9,10]
   const monthResult = []; 
-  const categoryInfo = {};
+  
   for (let c = 1; c < categories.length; c++) {
-    let categoryId = c;
+    let categoryInfo = {};
+    let categoryId = 0;
+    let categoryName;
+    let amountsBycategories = 0
+    categoryId = c ;
     const transactionData = await transactionDataDao.getFinanceDataByExpensesandCategory(userId, categoryId, yearValue, monthValue);
-    const theName = transactionData[c-1].categoryName;
-    const amountsBycategories = transactionData[c-1].amountSum;
-
-    console.log('amountsBycategories  ' + amountsBycategories);
-    console.log('theName  ' + theName);
-    if(!amountsBycategories)
+    if(transactionData)
     {
-      const categoryInfo = {};
-    }
-    else{
-      const categoryInfo = {
-        "id": theName,
-        "label": theName,
+      categoryName = transactionData.categoryName;
+      amountsBycategories = transactionData.amountSum;
+      categoryInfo = {
+        "id": categoryName,
+        "label": categoryName,
         "value": amountsBycategories,
         "color": `hsl(${Math.random() * 360}, 70%, 50%)`
       };
-    }
-
       monthResult.push(categoryInfo);
+    }
+      
   }
   monthResult.sort((a, b) => b.value - a.value);
   return monthResult;
@@ -100,9 +98,16 @@ const getFullMainTransaction = async (userId, monthValue) => {
   }
   
   for (let l = 0; l < 3; l++) {
-    expensesAmountByThreeCategories.push(expensesAmountByCategory[l].amount);
+    if(expensesAmountByThreeCategories)
+    {
+      expensesAmountByThreeCategories.push(expensesAmountByCategory[l].amount);
+    }
+    
   }
-
+  if(expensesAmountByThreeCategories)
+    {
+      expensesAmountByThreeCategories.sort((a, b) => a.amount - b.amount);
+    }
   const floatExpenseAmountsArray = expenseAmountsArray.map((str) => parseFloat(str));
   const floatdepositAmountsArray = depositAmountsArray.map((str) => parseFloat(str));
   const floatmonthlyExpenseAmountsArray = monthlyExpenseAmountsArray.map((str) => parseFloat(str));
