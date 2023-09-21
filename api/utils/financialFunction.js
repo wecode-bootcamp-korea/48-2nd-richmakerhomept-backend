@@ -20,21 +20,6 @@ const sum = (numbers) => {
       throw error; 
     }
   };
-  
-const portionInPercentages = async (portionNumber, sumNumber) => {
-    try {
-        if (typeof numbers[i] !== 'number') {
-          throw new Error("배열의 모든 요소는 숫자여야 합니다.");
-        }
-        const sumResult = await portionNumber/sumNumber;
-
-      return sumResult;
-
-    } catch (error) {
-      console.error("오류 발생:", error.message);
-      throw error; 
-    }
-  };
 
 const calculateConsumptionRate = (data) => {
     try {
@@ -74,3 +59,5 @@ const compoundInterest = (principal, rate, years) => {
       throw error; 
     }
   };
+
+  module.exports = { sum, calculateConsumptionRate, compoundInterest };

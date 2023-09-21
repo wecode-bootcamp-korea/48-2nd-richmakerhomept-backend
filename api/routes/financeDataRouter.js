@@ -4,6 +4,6 @@ const { financeDataController } = require('../controllers');
 const { loginRequired } = require('../utils/auth');
 
 const router = express.Router();
-router.get('/reports', loginRequired, financeDataController.getDepositsExpenses);
+router.get('', loginRequired, financeDataController.getDepositsExpenses);
 
 module.exports = router;

@@ -1,8 +1,8 @@
 const transactionDataDao = require('../models/transactionDataDao');
 const financialFunction = require('../utils/financialFunction');
 
-const getTransactionDataByDeposits= async (user, monthValue) => {
-    return await transactionDataDao.getTransactionDataByDeposits(user.id, monthValue);
+const getTransactionDataByDeposits= async (userId, monthValue) => {
+    return await transactionDataDao.getTransactionDataByDeposits(userId, monthValue);
   };
 
 const expensesByMonth = (sortBy) => {
@@ -14,45 +14,68 @@ const expensesByMonth = (sortBy) => {
     }
   };
 
-const getTransactionDataByExpenses= async (user, monthValue) => {
+const getTransactionDataByExpenses= async (userId, monthValue) => {
     const monthlyQuery = expensesByMonth();
-    return await transactionDataDao.getTransactionDataByExpenses(user.id, monthValue, monthlyQuery);
+    console.log("user  " + userId);
+    console.log("monthvalue  " + monthValue);
+
+    return await transactionDataDao.getTransactionDataByExpenses(userId, monthValue, monthlyQuery);
 };
 
 
-const getTransactionDataByMonthlyExpenses= async (user, monthValue) => {  
+const getTransactionDataByMonthlyExpenses= async (userId, monthValue) => {  
   const sortBy = 'monthly'
   const monthlyQuery = expensesByMonth(sortBy);
-  return await transactionDataDao.getTransactionDataByExpenses(user.id, monthValue, monthlyQuery);
+  return await transactionDataDao.getTransactionDataByExpenses(userId, monthValue, monthlyQuery);
 };
 
-const getFinanceDataByExpensesandCategory = async (user, yearValue, monthValue) => {
-  const categories = Object.values(categoryIdStatus); 
+const getFinanceDataByExpensesandCategory = async (userId, yearValue, monthValue) => {
+  
+  const categories = [1,2,3,4,5,6,7,8,9,10]
   const monthResult = []; 
-    
-  for (const categoryId of categories) {           
-    const transactionData = await transactionDataDao.getFinanceDataByExpensesandCategory(user.id, categoryId, yearValue, monthValue);
+  const categoryInfo = {};
+  for (let c = 1; c < categories.length; c++) {
+    let categoryId = c;
+    const transactionData = await transactionDataDao.getFinanceDataByExpensesandCategory(userId, categoryId, yearValue, monthValue);
+    const theName = transactionData[c-1].categoryName;
+    const amountsBycategories = transactionData[c-1].amountSum;
 
-    const categoryInfo = {
-      "id": Object.keys(categoryIdStatus).find(key => categoryIdStatus[key] === categoryId),
-      "label": Object.keys(categoryIdStatus).find(key => categoryIdStatus[key] === categoryId),
-      "value": transactionData,
-      "color": `hsl(${Math.random() * 360}, 70%, 50%)`
-    };
+    console.log('amountsBycategories  ' + amountsBycategories);
+    console.log('theName  ' + theName);
+    if(!amountsBycategories)
+    {
+      const categoryInfo = {};
+    }
+    else{
+      const categoryInfo = {
+        "id": theName,
+        "label": theName,
+        "value": amountsBycategories,
+        "color": `hsl(${Math.random() * 360}, 70%, 50%)`
+      };
+    }
+
       monthResult.push(categoryInfo);
   }
   monthResult.sort((a, b) => b.value - a.value);
   return monthResult;
 };
 
-const getFullMainTransaction = async (user, monthValue) => {
-  const expensesData = getTransactionDataByExpenses(user.id, monthValue);
-  const monthlyExpensesData = getTransactionDataByMonthlyExpenses(user.id, monthValue);
-  const depositsData = getTransactionDataByDeposits(user.id, monthValue);
+const getFullMainTransaction = async (userId, monthValue) => {
+  const expensesData = await getTransactionDataByExpenses(userId, monthValue);
+  console.log("rslt DataByExpenses ");
+  console.log(expensesData);
+  const monthlyExpensesData = await getTransactionDataByMonthlyExpenses(userId, monthValue);
+  console.log("rslt monthlyExpensesData ");
+  console.log(monthlyExpensesData);
+  const depositsData = await getTransactionDataByDeposits(userId, monthValue);
+  console.log("rslt depositsData ");
+  console.log(depositsData);
 
   const yearValue = 2023;
-  const expensesAmountByCategory = getFinanceDataByExpensesandCategory(user.id, yearValue, monthValue);
+  const expensesAmountByCategory = await getFinanceDataByExpensesandCategory(userId, yearValue, monthValue);
   const results =[];
+  console.log("expensesAmountByCategory " + expensesAmountByCategory);
 
   let sumExpensesAmount = 0;
   let sumDepositsAmount = 0;
@@ -69,26 +92,32 @@ const getFullMainTransaction = async (user, monthValue) => {
   }
 
   for (let j = 0; j < depositsData.length; j++) {
-    depositAmountsArray.push(depositsData[i].amount);
+    depositAmountsArray.push(depositsData[j].amount);
   }
   
   for (let k = 0; k < monthlyExpensesData.length; k++) {
-    monthlyExpenseAmountsArray.push(monthlyExpensesData[i].amount);
+    monthlyExpenseAmountsArray.push(monthlyExpensesData[k].amount);
   }
   
   for (let l = 0; l < 3; l++) {
-    expensesAmountByThreeCategories.push(expensesAmountByCategory[i].amount);
+    expensesAmountByThreeCategories.push(expensesAmountByCategory[l].amount);
   }
 
-  sumExpensesAmount = financialFunction.sum(expenseAmountsArray);
-  sumDepositsAmount = financialFunction.sum(depositAmountsArray);
-  sumMonthlyExpensesAmount = financialFunction.sum(monthlyExpenseAmountsArray);
+  const floatExpenseAmountsArray = expenseAmountsArray.map((str) => parseFloat(str));
+  const floatdepositAmountsArray = depositAmountsArray.map((str) => parseFloat(str));
+  const floatmonthlyExpenseAmountsArray = monthlyExpenseAmountsArray.map((str) => parseFloat(str));
+
+  sumExpensesAmount = financialFunction.sum(floatExpenseAmountsArray);
+  sumDepositsAmount = financialFunction.sum(floatdepositAmountsArray);
+  sumMonthlyExpensesAmount = financialFunction.sum(floatmonthlyExpenseAmountsArray);
   variableExpensesAmount = sumExpensesAmount-sumMonthlyExpensesAmount;
+  const sumMonthlyExpensesAmountString = "" + sumMonthlyExpensesAmount; //문자열로 배출
+  const sumDepositsAmountAmountString = "" + sumDepositsAmount;  //문자열로 배출
 
   const dataInfo = {
-    "depositsAmount": sumDepositsAmount,
+    "depositsAmount": sumDepositsAmountAmountString,
     "expensesAmount": sumExpensesAmount,
-    "monthlyExpenseAmounts": sumMonthlyExpensesAmount,
+    "monthlyExpenseAmounts": sumMonthlyExpensesAmountString,
     "variableExpenseAmounts": variableExpensesAmount,
     "amountsBycategories" : expensesAmountByCategory,
     "expensesAmountByThreeCategories" : expensesAmountByThreeCategories

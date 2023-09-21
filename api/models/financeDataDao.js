@@ -1,22 +1,24 @@
-const dataSource = require('./dataSource');
+const {AppDataSource} = require('./dataSource');
 
 const getFinanceDataByDeposits= async (userId, yearValue, monthValue) => {
     try {
-      const [result] = await dataSource.query( 
+      const result = await AppDataSource.query( 
         `
       SELECT
         SUM(ABS(t.amount)) AS amountSum
       FROM
         users AS u
-        LEFT JOIN user_finaces AS f ON u.id = f.user_id
-        LEFT JOIN transactions AS t ON t.user_finances_id = f.id
-      WHERE u.id = ? AND t.amount > 0
-        AND YEAR(t.created_at) = ? AND MONTH(t.created_at) = ?
-      GROUP BY u.id
-      ORDER BY t.created_at DESC;
+        RIGHT JOIN user_finances AS f ON u.id = f.user_id
+        RIGHT JOIN transactions AS t ON t.user_finances_id = f.id
+        WHERE u.id = ? AND t.amount > 0 AND YEAR(t.created_at) = ? 
+          AND MONTH(t.created_at) = ?
+        GROUP BY  DATE_FORMAT(t.created_at, '%Y-%m');
           `,
         [userId, yearValue, monthValue]
        );
+      if (!result){
+        result = "0";
+      }
       return result;
       
     } catch (err) {
@@ -29,21 +31,23 @@ const getFinanceDataByDeposits= async (userId, yearValue, monthValue) => {
 
   const getFinanceDataByExpenses= async (userId, yearValue, monthValue) => {
     try {
-      const [result] = await dataSource.query( 
+      const result = await AppDataSource.query( 
         `
       SELECT
         SUM(ABS(t.amount)) AS amountSum
       FROM
         users AS u
-        LEFT JOIN user_finaces AS f ON u.id = f.user_id
-        LEFT JOIN transactions AS t ON t.user_finances_id = f.id
-      WHERE u.id = ? AND t.amount < 0
-        AND YEAR(t.created_at) = ? AND MONTH(t.created_at) = ?
-      GROUP BY u.id
-      ORDER BY t.created_at DESC;
+        RIGHT JOIN user_finances AS f ON u.id = f.user_id
+        RIGHT JOIN transactions AS t ON t.user_finances_id = f.id
+        WHERE u.id = ? AND t.amount < 0 AND YEAR(t.created_at) = ? 
+        AND MONTH(t.created_at) = ?
+      GROUP BY  DATE_FORMAT(t.created_at, '%Y-%m');
           `,
         [userId, yearValue, monthValue]
        );
+       if (!result){
+        result = "0";
+      }
       return result;
       
     } catch (err) {

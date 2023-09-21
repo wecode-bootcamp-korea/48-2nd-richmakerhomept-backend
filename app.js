@@ -17,7 +17,7 @@ const createApp = () => {
   app.use(route);
 
   app.all('*', (req, res, next) => {
-    const err = new Error(`Can't fine ${req.originalUrl} on this server!`);
+    //const err = new Error(`Can't fine ${req.originalUrl} on this server!`);
 
     err.statusCode = 404;
 
